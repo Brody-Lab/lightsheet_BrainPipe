@@ -14,13 +14,15 @@ import numpy as np
 from tools.registration.register import elastix_command_line_call
 
 param_fld = "/scratch/ejdennis/rat_registration_parameter_folder"  # change if using mouse
-param_fld_affine = "/scratch/ejdennis/rat_BrainPipe/parameterfolder_affine"
-atl = "/scratch/ejdennis/mPRA_adj_crop.tif"  # defaults to pra
+param_fld_affine = "/jukebox/brody/abondy/lightsheet/elastix_params_test"
+param_fld = param_fld_affine
+#atl = "/jukebox/brody/ejdennis/lightsheet/mPRA_adj.tif"
 
+atl = "/scratch/ejdennis/mPRA_adj_crop.tif"
 
 # takes 6 command line arguments max
 stepid = str(sys.argv[1])
-print("stepid is 1 is {}".format(str(stepid==1)))
+print("stepid is 1 is {}".format(str(stepid=='1')))
 print("stepid is {}".format(stepid))
 src = str(sys.argv[2])  # folder to main image folder
 print("src is {}".format(src))
@@ -47,17 +49,17 @@ print("elsrc is {}".format(elsrc))
 if not os.path.exists(elsrc):
     os.mkdir(elsrc)
 
-if stepid == 0:
+if stepid == '0':
     print("step id is zero")
     mv = os.path.join(output_src, "reg__downsized_for_atlas.tif")
     #print("\nPath to downsized vol for registration to atlas: %s" % mv)
     fx = atl
     print("\nPath to atlas: %s" % fx)
-    out = os.path.join(os.path.dirname(elsrc), "reg_to_atl")
+    out = os.path.join(elsrc, "reg_to_atl")
     if not os.path.exists(out):
         os.mkdir(out)
 
-    params = [os.path.join(param_fld_affine, xx) for xx in os.listdir(param_fld_affine)]
+    params = [os.path.join(param_fld, xx) for xx in os.listdir(param_fld)]
     
     # run
     print("++++++++++++ {} TO {} IN {}+++++++++++".format(mv,fx,out))
