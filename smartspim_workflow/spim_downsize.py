@@ -16,6 +16,15 @@ def fast_scandir(dirname):
         subfolders.extend(fast_scandir(dirname))
     return subfolders
 
+def to_eight_bit_range(img):
+    imgcp = img.copy()
+    imgcp[imgcp>np.percentile(img,99)] = np.percentile(img,99)
+    if np.min(imgcp) < 0:
+        imgcp=np.add(imgcp,abs(min(imgcp))
+    if np.max(imgcp) > 255:
+        imgcp = np.divide(imgcp,np.ceil(np.max(imgcp)/256))
+    return imgcp
+
 def resize_helper(img, dst, resizef):
     print(os.path.basename(img))
     im = sitk.GetArrayFromImage(sitk.ReadImage(img))
@@ -40,7 +49,7 @@ def dwnsz(pth,save_str,src):
     z = len(imgs)
     y,x = sitk.GetArrayFromImage(sitk.ReadImage(imgs[0])).shape
     arr = np.zeros((z,y,x))
-    atlpth = "/jukebox/brody/ejdennis/lightsheet/mPRA_adj.tif"
+    atlpth = "/jukebox/brody/ejdennis/lightsheet/mPRA.tif"
     atl = sitk.GetArrayFromImage(sitk.ReadImage(atlpth))
     atlz,atly,atlx = atl.shape #get shape, sagittal
     #read all the downsized images
@@ -55,8 +64,9 @@ def dwnsz(pth,save_str,src):
     print("############### THE NEW AXES ARE {},{},{}".format(z,y,x))
     print("\n**********downsizing....heavy!**********\n")
     arrsagd = zoom(arrsag, ((atlz*1.4/z),(atly*1.4/y),(atlx*1.4/x)), order=1)
+    arrsagd = to_eight_bit_range(arrsagd)
     print('saving tiff at {}'.format(os.path.join(os.path.dirname(dst), "{}_downsized_for_atlas.tif".format(savestr))))
-    tif.imsave(os.path.join(os.path.dirname(dst), "{}_downsized_for_atlas.tif".format(savestr)), arrsagd.astype("uint16"))
+    tif.imsave(os.path.join(os.path.dirname(dst), "{}_downsized_for_atlas.tif".format(savestr)), arrsagd.astype("uint8"))
 
 
 if __name__ == "__main__":
@@ -86,6 +96,7 @@ if __name__ == "__main__":
             savestr = "cell_"
             pth=cell_ch
 
+        print("path to atlas used for scaling {}".format(atlpth))
         print("\nPath to stitched images: %s\n" % pth)
         #path to store downsized images
         dst = os.path.join(os.path.dirname(src), "{}_downsized".format(savestr))
@@ -93,7 +104,10 @@ if __name__ == "__main__":
         if not os.path.exists(dst): os.mkdir(dst)
         imgs = [os.path.join(pth, xx) for xx in os.listdir(pth) if "tif" in xx]
         z = len(imgs)
-        print("z is {}".format(z))
+        imgtest = tif.imread(imgs[int(z/2)]))
+        x,y=np.shape(imgtest)
+        print("z is {}, y is {}, x is {}".format(z,y,x))
+        np.save(os.path.join(src,"zyx.npy"),[z,y,x])
         resizef = 5 #factor to downsize imgs by
         print("resize factor is {}".format(resizef))
         iterlst = [(img, dst, resizef) for img in imgs]
